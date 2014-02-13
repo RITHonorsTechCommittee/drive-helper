@@ -1,4 +1,4 @@
-/* I wrote this in VIM! */
+package edu.rit.honors.drive;
 
 import java.util.Collection;
 
@@ -6,7 +6,7 @@ import java.util.Collection;
  * Extends the <code>File</code> interface with child operations
  */
 
-interface Folder extends edu.rit.honors.drive.File {
+public interface Folder extends edu.rit.honors.drive.File {
 
 	/**
 	 * Optional.  Implementation will assist compatibility with
