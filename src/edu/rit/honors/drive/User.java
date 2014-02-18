@@ -11,7 +11,7 @@ public interface User
      * Get the ID of the user.
      * @return The ID.
      */
-    public int getId();
+    public String getId();
 
     /**
      * Get the name of the user.
