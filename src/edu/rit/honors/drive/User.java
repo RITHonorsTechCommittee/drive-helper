@@ -6,6 +6,10 @@ package edu.rit.honors.drive;
  */
 public interface User
 {
+	/**
+	 * The constants for the User roles.
+	 */
+	public int OWNER = 0, WRITER = 1, READER = 2;
 
     /**
      * Get the ID of the user.
@@ -24,5 +28,11 @@ public interface User
      * @return The email address.
      */
     public String getEmail();
+
+    /**
+     * Get the role of the user.
+     * @return The role, defined as an integer.
+     */
+    public int getRole();
     
 }
