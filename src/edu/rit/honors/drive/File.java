@@ -1,6 +1,6 @@
 package edu.rit.honors.drive;
 
-import com.google.api.services.drive.model.File;
+import java.util.Collection;
 
 /**
  * An (as of now incomplete) Implementation of the file interface for use in 
@@ -13,6 +13,8 @@ import com.google.api.services.drive.model.File;
  * We will need to look at the entire Model package and see how much we want to wrap ourselves.
  */
 public interface File {
+	
+	public String getID();
 	
 	/**
 	 * Gets the primary owner of a the given file object.

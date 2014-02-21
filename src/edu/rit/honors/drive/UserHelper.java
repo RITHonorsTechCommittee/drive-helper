@@ -1,3 +1,4 @@
+package edu.rit.honors.drive;
 
 public interface UserHelper {
 	
