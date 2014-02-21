@@ -44,6 +44,9 @@ public class FileTreeModel implements Container.Hierarchical {
 						Collection<File> children = f.getChildren();
 						unexplored.remove(f.getID());
 						for(File x : children){
+							if(x instanceof Folder){
+								unexplored.put(x.getID(), (Folder)x);
+							}
 							item = new FileItem(x);
 							if(x.getID().equals(itemId)){
 								found = true; theItem = item;

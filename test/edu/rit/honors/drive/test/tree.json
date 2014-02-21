@@ -1,0 +1,29 @@
+{ 
+    "id":"a001",
+    "name":"Root",
+    "owner":"root",
+    "children":[
+        {
+            "id":"b0c9",
+            "name":"README",
+            "owner":"root",
+        },
+        {
+            "id":"a010",
+            "name":"cfg",
+            "owner":"web",
+            "children":[
+                {
+                    "id":"c029",
+                    "name":"httpd.conf",
+                    "owner":"web"
+                },
+            ],
+        },
+        {
+            "id":"df01",
+            "name":"last.txt",
+            "owner":"user",
+        },
+    ],
+}

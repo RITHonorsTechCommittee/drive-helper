@@ -8,8 +8,6 @@ import java.util.ArrayList;
  * @author Veronica Wharton
  */
 public interface FileHelper {
-	
-	public FileHelper getInstance();
 
 	/**
 	 * Find the immediate children of a given File.
