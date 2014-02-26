@@ -19,7 +19,7 @@
     </context-param>
     <servlet>
         <servlet-name>Google Drive Permissions Helper</servlet-name>
-        <servlet-class>com.vaadin.server.GAEVaadinServlet</servlet-class>
+        <servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
         <init-param>
             <description>
             Vaadin UI class to use</description>

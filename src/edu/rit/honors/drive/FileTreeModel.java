@@ -26,7 +26,7 @@ public class FileTreeModel implements Container.Hierarchical {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -4657996361438210802L;
+	private static final long serialVersionUID = -4657996361438210803L;
 	private static final int MAX_DEPTH = 10;
 
 	@Override
@@ -130,7 +130,19 @@ public class FileTreeModel implements Container.Hierarchical {
 		if(null == x){
 			return null;
 		}else{
-			return x.getChildren();
+			//TODO make into items and put in the cache
+			Collection<File> children = x.getChildren();
+			Collection<FileItem> items = new ArrayList<FileItem>(children.size());
+			FileItem i;
+			for(File f : children){
+				i = new FileItem(f);
+				items.add(i);
+				cache.put(f.getID(), i);
+				if(f instanceof Folder){
+					unexplored.put(f.getID(), (Folder)f);
+				}
+			}
+			return items;
 		}
 	}
 
