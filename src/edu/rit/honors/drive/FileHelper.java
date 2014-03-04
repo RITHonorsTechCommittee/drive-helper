@@ -1,6 +1,5 @@
 package edu.rit.honors.drive;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import com.google.api.services.drive.model.File;
@@ -34,21 +33,14 @@ public interface FileHelper {
 	 * @return a list of the immediate children of file. if file has no
 	 * no children, return null
 	 */
-	public ArrayList<File> getSiblings(File file);
-
-	/**
-	 * Find the tree of files beneath this file
-	 * @param file The File whose tree should be found
-	 * @return a tree structure of all the files with 'file' as their ancestor
-	 */
-	public File getTree(File file); 
+	public Collection<File> getSiblings(File file);
 
 	/**
 	 * Find all users who have read-write permission for a given file
 	 * @param file The file from which all the users should be retrieved
 	 * @return a list of all of 'file's' users
 	 */
-	public ArrayList<User> getUsers(File file);
+	public Collection<User> getUsers(File file);
 
 	/**
 	 * Give a user read-write permission to a given File
