@@ -53,12 +53,7 @@ public class FileHelperImpl implements FileHelper
 		return instance;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.rit.honors.drive.FileHelper#getChildren(edu.rit.honors.drive.File)
-	 */
+	@Override
 	public Collection<File> getChildren(File file)
 	{
 		List<File> result = new ArrayList<File>();
@@ -107,11 +102,6 @@ public class FileHelperImpl implements FileHelper
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#getParent(edu.rit.honors.drive.File)
-	 */
 	@Override
 	public File getParent(File file)
 	{
@@ -124,37 +114,20 @@ public class FileHelperImpl implements FileHelper
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.rit.honors.drive.FileHelper#getSiblings(edu.rit.honors.drive.File)
-	 */
 	@Override
-	public ArrayList<File> getSiblings(File file)
+	public Collection<File> getSiblings(File file)
+	{
+		File parent = getParent(file);
+		return getChildren(parent);
+	}
+
+	@Override
+	public Collection<User> getUsers(File file)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#getUsers(edu.rit.honors.drive.File)
-	 */
-	@Override
-	public ArrayList<User> getUsers(File file)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#addUser(edu.rit.honors.drive.User,
-	 * edu.rit.honors.drive.File)
-	 */
 	@Override
 	public boolean addUser(User user, File file)
 	{
@@ -162,13 +135,6 @@ public class FileHelperImpl implements FileHelper
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.rit.honors.drive.FileHelper#removeUser(edu.rit.honors.drive.User,
-	 * edu.rit.honors.drive.File)
-	 */
 	@Override
 	public boolean removeUser(User user, File file)
 	{
@@ -176,12 +142,6 @@ public class FileHelperImpl implements FileHelper
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#hasUser(edu.rit.honors.drive.User,
-	 * edu.rit.honors.drive.File)
-	 */
 	@Override
 	public boolean hasUser(User user, File file)
 	{
@@ -204,7 +164,8 @@ public class FileHelperImpl implements FileHelper
 	@Override
 	public boolean hasChildren(File f)
 	{
-		return isDirectory(f) && false;
+		// Should find a better way than just calculating the children.
+		return isDirectory(f) && getChildren(f).size() > 0;
 	}
 
 	@Override
