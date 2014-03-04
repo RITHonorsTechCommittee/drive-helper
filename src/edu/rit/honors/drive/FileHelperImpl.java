@@ -12,6 +12,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.ParentReference;
 
 /**
  * @author Greg
@@ -113,7 +114,12 @@ public class FileHelperImpl implements FileHelper
 	@Override
 	public File getParent(File file)
 	{
-		// TODO Auto-generated method stub
+		List<ParentReference> parents = file.getParents();
+		if (parents != null && parents.size() > 0)
+		{
+			return getFileById(parents.get(0).getId());
+		}
+		
 		return null;
 	}
 
@@ -125,18 +131,6 @@ public class FileHelperImpl implements FileHelper
 	 */
 	@Override
 	public ArrayList<File> getSiblings(File file)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#getTree(edu.rit.honors.drive.File)
-	 */
-	@Override
-	public File getTree(File file)
 	{
 		// TODO Auto-generated method stub
 		return null;
@@ -197,22 +191,26 @@ public class FileHelperImpl implements FileHelper
 	@Override
 	public boolean isFile(File f)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return f != null && !f.getMimeType().equals(FOLDER_MIME);
 	}
 
 	@Override
 	public boolean isDirectory(File f)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return f != null && f.getMimeType().equals(FOLDER_MIME);
 	}
 
 	@Override
 	public boolean hasChildren(File f)
 	{
+		return isDirectory(f) && false;
+	}
+
+	@Override
+	public File getFileById(String id)
+	{
 		// TODO Auto-generated method stub
-		return false;
+		return null;
 	}
 
 }
