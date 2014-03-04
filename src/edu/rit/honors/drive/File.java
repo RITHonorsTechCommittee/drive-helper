@@ -1,6 +1,6 @@
 package edu.rit.honors.drive;
 
-import com.google.api.services.drive.model.File;
+import java.util.Collection;
 
 /**
  * An (as of now incomplete) Implementation of the file interface for use in 
