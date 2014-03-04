@@ -3,6 +3,8 @@ package edu.rit.honors.drive;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.google.api.services.drive.model.File;
+
 /**
  * An interface for finding files in the RIT Honors Google Drive.
  * 
@@ -16,7 +18,7 @@ public interface FileHelper {
 	 * @return a list of the immediate children of file. if file has no
 	 * no children, return null
 	 */
-	public Collection<com.google.api.services.drive.model.File> getChildren(com.google.api.services.drive.model.File file);
+	public Collection<File> getChildren(File file);
 
 	/**
 	 * Find the parent of a given File.
@@ -72,6 +74,32 @@ public interface FileHelper {
 	 * @param file The File to check against
 	 * @return true if the user was successfully added to the file; else false
 	 */
-	public boolean hasUser(User user, File file); 
+	public boolean hasUser(User user, File file);
+	
+	/**
+	 * Checks if a "File" is actually a file (as opposed to a folder)
+	 * 
+	 * @param f The file to check
+	 * @return True, if it is a file.  False, if it is a folder
+	 */
+	public boolean isFile(File f);
+	
+	/**
+	 * Checks if a "File" is actually a folder
+	 * 
+	 * @param f The file to check
+	 * @return True, if it is a folder. False, if it is a file
+	 */
+	public boolean isDirectory(File f);
+	
+	
+	/**
+	 * Check if a directory has any children.
+	 * 
+	 * @param f The file to check
+	 * @return True, if the file is a directory that has children.
+	 * 			False, if the file is not a directory, or has no children
+	 */
+	public boolean hasChildren(File f);
 	
 }

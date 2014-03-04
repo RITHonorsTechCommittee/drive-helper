@@ -10,10 +10,13 @@ import java.util.List;
 
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files;
+import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
 /**
  * @author Greg
+ * 
+ * Implementation of the File Helper Singleton
  * 
  */
 public class FileHelperImpl implements FileHelper
@@ -26,7 +29,7 @@ public class FileHelperImpl implements FileHelper
 	private static FileHelperImpl instance;
 	
 	/**
-	 * This doesn't implement singleton correctly (should be private)
+	 * This doesn't implement singleton correctly (constructor should be private)
 	 * TODO:  One we figure out how this will fit into the lifecycle of the servlet we can refactor
 	 * 
 	 * @param service A reference to the drive API that has been authenticated
@@ -34,6 +37,7 @@ public class FileHelperImpl implements FileHelper
 	public FileHelperImpl(Drive service)
 	{
 		this.service = service;
+		instance = this;
 	}
 	
 	/**
@@ -52,9 +56,9 @@ public class FileHelperImpl implements FileHelper
 	 * @see
 	 * edu.rit.honors.drive.FileHelper#getChildren(edu.rit.honors.drive.File)
 	 */
-	public Collection<com.google.api.services.drive.model.File> getChildren(com.google.api.services.drive.model.File file)
+	public Collection<File> getChildren(File file)
 	{
-		List<com.google.api.services.drive.model.File> result = new ArrayList<com.google.api.services.drive.model.File>();
+		List<File> result = new ArrayList<File>();
 		Files.List request;
 		try
 		{
@@ -70,7 +74,7 @@ public class FileHelperImpl implements FileHelper
 					FileList files = request.execute();
 	
 					// Add every file / folder in the hierarchy
-					for (com.google.api.services.drive.model.File f : files.getItems())
+					for (File f : files.getItems())
 					{
 						if (f.getMimeType().equals(FOLDER_MIME))
 						{
@@ -185,6 +189,27 @@ public class FileHelperImpl implements FileHelper
 	 */
 	@Override
 	public boolean hasUser(User user, File file)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isFile(File f)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isDirectory(File f)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean hasChildren(File f)
 	{
 		// TODO Auto-generated method stub
 		return false;
