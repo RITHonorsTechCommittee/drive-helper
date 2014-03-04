@@ -1,5 +1,7 @@
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.User;
+import com.google.api.services.drive.model.Permission;
+
 package edu.rit.honors.drive;
 
 public interface UserHelper {
@@ -13,10 +15,10 @@ public interface UserHelper {
 	public User getUser(String email);
 
 	/**
-	 * Get the permissions of the given user
+	 * Get the permissions of the given user for the given file
 	 * @return permission
 	 */
-	public Object getPermission(User u);
+	public Permission getPermission(User u, File f);
 
 	/**
 	 * @return the role of the user
