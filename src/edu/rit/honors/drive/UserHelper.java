@@ -1,15 +1,25 @@
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.User;
 package edu.rit.honors.drive;
+
 public interface UserHelper {
-	
-	//Returns the User with the given email address
+
+	public int OWNER = 0, WRITER = 1, READER = 2;	
+
+	/**
+	 * Get the User with the given email address
+	 * @return the User
+	 */
 	public User getUser(String email);
 
-	//Return the permissions of the given user
+	/**
+	 * Get the permissions of the given user
+	 * @return permission
+	 */
 	public Object getPermission(User u);
 
-	//Preconditions: User and file are valid
-	//Postcondition: Returns constants
+	/**
+	 * @return the role of the user
+	 */
 	public int getRole(User u, File f);
 }
