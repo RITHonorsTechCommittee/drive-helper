@@ -17,30 +17,32 @@ import com.google.api.services.drive.model.ParentReference;
 /**
  * @author Greg
  * 
- * Implementation of the File Helper Singleton
+ *         Implementation of the File Helper Singleton
  * 
  */
 public class FileHelperImpl implements FileHelper
 {
 
 	private static final String FOLDER_MIME = "application/vnd.google-apps.folder";
-	
+
 	private Drive service;
-	
+
 	private static FileHelperImpl instance;
-	
+
 	/**
-	 * This doesn't implement singleton correctly (constructor should be private)
-	 * TODO:  One we figure out how this will fit into the lifecycle of the servlet we can refactor
+	 * This doesn't implement singleton correctly (constructor should be
+	 * private) TODO: One we figure out how this will fit into the lifecycle of
+	 * the servlet we can refactor
 	 * 
-	 * @param service A reference to the drive API that has been authenticated
+	 * @param service
+	 *            A reference to the drive API that has been authenticated
 	 */
 	public FileHelperImpl(Drive service)
 	{
 		this.service = service;
 		instance = this;
 	}
-	
+
 	/**
 	 * Gets the instance of the FileHelper
 	 * 
@@ -50,7 +52,7 @@ public class FileHelperImpl implements FileHelper
 	{
 		return instance;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -64,16 +66,16 @@ public class FileHelperImpl implements FileHelper
 		try
 		{
 			request = service.files().list();
-		
+
 			request.setQ(String.format("'%s' in parents", file.getId()));
 			request.setFields("items(id,mimeType,ownerNames,owners(displayName,kind,permissionId),parents(id,isRoot,kind),title),kind,nextPageToken");
-	
+
 			do
 			{
 				try
 				{
 					FileList files = request.execute();
-	
+
 					// Add every file / folder in the hierarchy
 					for (File f : files.getItems())
 					{
@@ -86,9 +88,9 @@ public class FileHelperImpl implements FileHelper
 							result.add(f);
 						}
 					}
-	
+
 					request.setPageToken(files.getNextPageToken());
-	
+
 				}
 				catch (IOException e)
 				{
@@ -96,8 +98,7 @@ public class FileHelperImpl implements FileHelper
 					throw e;
 				}
 			} while (request.getPageToken() != null && request.getPageToken().length() > 0);
-	
-	
+
 			return result;
 		}
 		catch (IOException e1)
@@ -119,7 +120,7 @@ public class FileHelperImpl implements FileHelper
 		{
 			return getFileById(parents.get(0).getId());
 		}
-		
+
 		return null;
 	}
 
@@ -209,8 +210,15 @@ public class FileHelperImpl implements FileHelper
 	@Override
 	public File getFileById(String id)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		try
+		{
+			File file = service.files().get(id).execute();
+			return file;
+		}
+		catch (IOException e)
+		{
+			return null;
+		}
 	}
 
 }
