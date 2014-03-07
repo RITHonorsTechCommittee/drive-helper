@@ -204,8 +204,7 @@ public class FileHelperImpl implements FileHelper
 	@Override
 	public boolean isDirectory(File f)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return "application/vnd.google-apps.folder".equals(f.getMimeType());
 	}
 
 	@Override

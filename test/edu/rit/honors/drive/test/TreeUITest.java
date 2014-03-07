@@ -1,6 +1,5 @@
 package edu.rit.honors.drive.test;
 
-import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.server.VaadinRequest;
@@ -10,7 +9,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import edu.rit.honors.drive.FileTreeModel;
+import edu.rit.honors.drive.model.GoogleDriveFilesystemContainer;
 
 @Title("Tree UI Test")
 //@Theme("vaadingae")
@@ -41,7 +40,7 @@ public class TreeUITest extends UI {
         // Display the greeting
         content.addComponent(new Label("Hello World!"));
         Tree tree = new Tree();
-        tree.setContainerDataSource(new FileTreeModel(FakeDrive.getInstance().getTree(null)));
+        tree.setContainerDataSource(new GoogleDriveFilesystemContainer(FakeDrive.getInstance().getChildren(null)));
         content.addComponent(tree);
     }
 }

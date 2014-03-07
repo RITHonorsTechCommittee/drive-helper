@@ -1,4 +1,10 @@
 /*
+ * GoogleDriveFilesystemContainer is an adaptation of com.vaadin.data.util.FilesystemContainer.
+ * Modifications were made by Reginald Pierce in 2014.  Use of this file is pursuant
+ * to the original Vaadin license.
+ */
+
+/*
  * Copyright 2000-2013 Vaadin Ltd.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -17,38 +23,36 @@
 package edu.rit.honors.drive.model;
 
 
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.google.api.client.util.DateTime;
 import com.google.api.services.drive.model.File;
 import com.vaadin.data.Container;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
+import com.vaadin.data.util.MethodProperty;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Resource;
-import com.vaadin.util.FileTypeResolver;
 
-import edu.rit.honors.drive.FileHelper;
 import edu.rit.honors.drive.HelperFactory;
-import edu.rit.honors.drive.test.FakeDrive;
 
 /**
- * A hierarchical container wrapper for a filesystem.
+ * A hierarchical container wrapper for Google Drive.
  * 
+ * @author Reginald Pierce
  * @author Vaadin Ltd.
- * @since 3.0
  */
 @SuppressWarnings("serial")
-public class DriveFilesystemContainer implements Container.Hierarchical {
+public class GoogleDriveFilesystemContainer implements Container.Hierarchical {
 
     /**
      * String identifier of a file's "name" property.
@@ -105,9 +109,9 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
 
     private File[] roots = new File[] {};
 
-    private FilenameFilter filter = null;
-
     private boolean recursive = true;
+
+	public static final Comparator<File> sorter = new FileSorter();
 
     /**
      * Constructs a new <code>FileSystemContainer</code> with the specified file
@@ -117,7 +121,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
      *            the root file for the new file-system container. Null values
      *            are ignored.
      */
-    public DriveFilesystemContainer(File root) {
+    public GoogleDriveFilesystemContainer(File root) {
         if (root != null) {
             roots = new File[] { root };
         }
@@ -125,15 +129,42 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
 
     /**
      * Constructs a new <code>FileSystemContainer</code> with the specified file
-     * as the root of the filesystem. The files are included recursively.
+     * as the root of the filesystem. The files are included recursively
+     * only if specified by the recursive parameter.
      * 
      * @param root
      *            the root file for the new file-system container.
      * @param recursive
      *            should the container recursively contain subdirectories.
      */
-    public DriveFilesystemContainer(File root, boolean recursive) {
+    public GoogleDriveFilesystemContainer(File root, boolean recursive) {
         this(root);
+        setRecursive(recursive);
+    }
+    
+    /**
+     * Constructs a new <code>FileSystemContainer</code> with the specified files
+     * as the root of the filesystem. The files are included recursively.
+     * 
+     * @param roots
+     *            a Collection of root files for the new file-system container.
+     */
+    public GoogleDriveFilesystemContainer(Collection<File> roots){
+    	this.roots = (File[]) roots.toArray();
+    }
+    
+    /**
+     * Constructs a new <code>FileSystemContainer</code> with the specified files
+     * as the root of the filesystem. The files are included recursively
+     * only if specified by the recursive parameter.
+     * 
+     * @param root
+     *            a Collection of root files for the new file-system container.
+     * @param recursive
+     *            should the container recursively contain subdirectories.
+     */
+    public GoogleDriveFilesystemContainer(Collection<File> roots, boolean recursive){
+        this(roots);
         setRecursive(recursive);
     }
 
@@ -168,7 +199,8 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
      */
     @Override
     public boolean areChildrenAllowed(Object itemId) {
-        return itemId instanceof File && ((File) itemId).getMimeType() == "application/vnd.google-apps.folder";
+        return itemId instanceof File 
+        		&& HelperFactory.getFileHelper().isDirectory((File)itemId);
     }
 
     /*
@@ -182,9 +214,8 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
         if (!(itemId instanceof File)) {
             return Collections.unmodifiableCollection(new LinkedList<File>());
         }
-        final Collection<File> l = HelperFactory.getFileHelper().getChildren((File)itemId);
-        //TODO make a Comparator for Google Drive Files
-        //Collections.sort(l);
+        final List<File> l = new ArrayList<File>(HelperFactory.getFileHelper().getChildren((File)itemId));
+        Collections.sort(l, GoogleDriveFilesystemContainer.sorter );
 
         return Collections.unmodifiableCollection(l);
     }
@@ -256,8 +287,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
         }
 
         final List<File> l = Arrays.asList(f);
-        //TODO make Comparator for Google Drive File
-        //Collections.sort(l);
+        Collections.sort(l, GoogleDriveFilesystemContainer.sorter );
 
         return Collections.unmodifiableCollection(l);
     }
@@ -316,20 +346,26 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
         if (!(itemId instanceof File)) {
             return false;
         }
-        boolean val = false;
-
-        // Try to match all roots
-        for (int i = 0; i < roots.length; i++) {
-//            try {
-                //val |= ((File) itemId)
-                		//.getCanonicalPath().startsWith(
-                        //roots[i].getCanonicalPath());
-//            } catch (final IOException e) {
-                // Exception ignored
-//            }
-        	//TODO figure out how to find files in list
-        }
-        return val;
+        String id = ((File)itemId).getId();
+        
+        return containsId(Arrays.asList(roots),id);
+    }
+    
+    /**
+     * Internal recursive method to match ids
+     * 
+     * @param c Collection of Files to match against
+     * @param id the String id of interest
+     * @return true only if one of the files in Collection c or one of its
+     * 			children is the file identified by id
+     */
+    private boolean containsId(Collection<File> c,String id){
+    	boolean val = false;
+    	for(File x : c){
+    		val |= id.equals(x.getId()) || containsId(HelperFactory.getFileHelper().getChildren(x),id);
+        	if(val)break;
+    	}
+    	return val;
     }
 
     /*
@@ -355,11 +391,10 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
      *            the root file where to start adding files
      */
     private void addItemIds(Collection<File> col, File f) {
-        final List<File> ll = HelperFactory.getFileHelper().getChildren((File)f);
-        //TODO make Comparator for Google Drive Files
-        //Collections.sort(ll);
+        final List<File> l = new ArrayList<File>(HelperFactory.getFileHelper().getChildren((File)f));
+        Collections.sort(l, GoogleDriveFilesystemContainer.sorter ); 
 
-        for (final Iterator<File> i = ll.iterator(); i.hasNext();) {
+        for (final Iterator<File> i = l.iterator(); i.hasNext();) {
             final File lf = i.next();
             col.add(lf);
             if (HelperFactory.getFileHelper().isDirectory(lf)) {
@@ -384,11 +419,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
         } else {
             File[] f;
             if (roots.length == 1) {
-                if (filter != null) {
-                    f = roots[0].listFiles(filter);
-                } else {
-                    f = roots[0].listFiles();
-                }
+            	return HelperFactory.getFileHelper().getChildren(roots[0]);
             } else {
                 f = roots;
             }
@@ -399,7 +430,8 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
             }
 
             final List<File> l = Arrays.asList(f);
-            Collections.sort(l);
+            Collections.sort(l,GoogleDriveFilesystemContainer.sorter);
+            
             return Collections.unmodifiableCollection(l);
         }
 
@@ -417,7 +449,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
      * @return the requested property's value, or <code>null</code>
      */
     @Override
-    public Property getContainerProperty(Object itemId, Object propertyId) {
+    public Property<? extends Object> getContainerProperty(Object itemId, Object propertyId) {
 
         if (!(itemId instanceof File)) {
             return null;
@@ -491,20 +523,15 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
      *            the root to start counting from.
      */
     private int getFileCounts(File f) {
-        File[] l;
-        if (filter != null) {
-            l = f.listFiles(filter);
-        } else {
-            l = f.listFiles();
-        }
+        Collection<File> l = HelperFactory.getFileHelper().getChildren(f);
 
         if (l == null) {
             return 0;
         }
-        int ret = l.length;
-        for (int i = 0; i < l.length; i++) {
-            if (l[i].isDirectory()) {
-                ret += getFileCounts(l[i]);
+        int ret = l.size();
+        for (File x : l) {
+            if (HelperFactory.getFileHelper().isDirectory(x)) {
+                ret += getFileCounts(x);
             }
         }
         return ret;
@@ -526,29 +553,24 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
             }
             return counts;
         } else {
-            File[] f;
+            Collection<File> f;
             if (roots.length == 1) {
-                if (filter != null) {
-                    f = roots[0].listFiles(filter);
-                } else {
-                    f = roots[0].listFiles();
+                f = HelperFactory.getFileHelper().getChildren(roots[0]);
+                if (f == null) {
+                	return 0;
                 }
+                return f.size();
             } else {
-                f = roots;
+                return roots.length;
             }
-
-            if (f == null) {
-                return 0;
-            }
-            return f.length;
         }
     }
 
     /**
      * A Item wrapper for files in a filesystem.
      * 
+     * @author Reginald Pierce
      * @author Vaadin Ltd.
-     * @since 3.0
      */
     public class FileItem implements Item {
 
@@ -569,7 +591,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          * here, we use the default documentation from implemented interface.
          */
         @Override
-        public Property getItemProperty(Object id) {
+        public Property<? extends Object> getItemProperty(Object id) {
             return getContainerProperty(file, id);
         }
 
@@ -594,7 +616,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          */
         @Override
         public int hashCode() {
-            return file.hashCode() ^ FilesystemContainer.this.hashCode();
+            return file.hashCode() ^ GoogleDriveFilesystemContainer.this.hashCode();
         }
 
         /**
@@ -618,8 +640,8 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
         /**
          * Gets the host of this file.
          */
-        private FilesystemContainer getHost() {
-            return FilesystemContainer.this;
+        private GoogleDriveFilesystemContainer getHost() {
+            return GoogleDriveFilesystemContainer.this;
         }
 
         /**
@@ -627,8 +649,8 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          * 
          * @return Date
          */
-        public Date lastModified() {
-            return new Date(file.lastModified());
+        public DateTime lastModified() {
+            return file.getModifiedDate();
         }
 
         /**
@@ -637,7 +659,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          * @return file name of this file.
          */
         public String getName() {
-            return file.getName();
+            return file.getTitle();
         }
 
         /**
@@ -646,7 +668,7 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          * @return the icon of this file.
          */
         public Resource getIcon() {
-            return FileTypeResolver.getIcon(file);
+            return new ExternalResource(file.getIconLink());
         }
 
         /**
@@ -655,21 +677,24 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          * @return size
          */
         public long getSize() {
-            if (file.isDirectory()) {
+            if (HelperFactory.getFileHelper().isDirectory(file)) {
                 return 0;
             }
-            return file.length();
+            return file.getFileSize();
         }
 
         /**
+         * Generally, the toString() method will return the same value as getName().
+         * 
+         * @see getName()
          * @see java.lang.Object#toString()
          */
         @Override
         public String toString() {
-            if ("".equals(file.getName())) {
-                return file.getAbsolutePath();
+            if ("".equals(file.getTitle())) {
+                return file.getId();
             }
-            return file.getName();
+            return file.getTitle();
         }
 
         /**
@@ -677,7 +702,8 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
          * 
          * @see com.vaadin.data.Item#addItemProperty(Object, Property)
          */
-        @Override
+        @SuppressWarnings("rawtypes")
+		@Override
         public boolean addItemProperty(Object id, Property property)
                 throws UnsupportedOperationException {
             throw new UnsupportedOperationException("Filesystem container "
@@ -696,72 +722,6 @@ public class DriveFilesystemContainer implements Container.Hierarchical {
                     "Filesystem container does not support property removal");
         }
 
-    }
-
-    /**
-     * Generic file extension filter for displaying only files having certain
-     * extension.
-     * 
-     * @author Vaadin Ltd.
-     * @since 3.0
-     */
-    public class FileExtensionFilter implements FilenameFilter, Serializable {
-
-        private final String filter;
-
-        /**
-         * Constructs a new FileExtensionFilter using given extension.
-         * 
-         * @param fileExtension
-         *            the File extension without the separator (dot).
-         */
-        public FileExtensionFilter(String fileExtension) {
-            filter = "." + fileExtension;
-        }
-
-        /**
-         * Allows only files with the extension and directories.
-         * 
-         * @see java.io.FilenameFilter#accept(File, String)
-         */
-        @Override
-        public boolean accept(File dir, String name) {
-            if (name.endsWith(filter)) {
-                return true;
-            }
-            return new File(dir, name).isDirectory();
-        }
-
-    }
-
-    /**
-     * Returns the file filter used to limit the files in this container.
-     * 
-     * @return Used filter instance or null if no filter is assigned.
-     */
-    public FilenameFilter getFilter() {
-        return filter;
-    }
-
-    /**
-     * Sets the file filter used to limit the files in this container.
-     * 
-     * @param filter
-     *            The filter to set. <code>null</code> disables filtering.
-     */
-    public void setFilter(FilenameFilter filter) {
-        this.filter = filter;
-    }
-
-    /**
-     * Sets the file filter used to limit the files in this container.
-     * 
-     * @param extension
-     *            the Filename extension (w/o separator) to limit the files in
-     *            container.
-     */
-    public void setFilter(String extension) {
-        filter = new FileExtensionFilter(extension);
     }
 
     /**
