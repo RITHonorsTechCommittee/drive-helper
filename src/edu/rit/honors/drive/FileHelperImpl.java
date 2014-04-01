@@ -12,34 +12,37 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.ParentReference;
 
 /**
  * @author Greg
  * 
- * Implementation of the File Helper Singleton
+ *         Implementation of the File Helper Singleton
  * 
  */
 public class FileHelperImpl implements FileHelper
 {
 
 	private static final String FOLDER_MIME = "application/vnd.google-apps.folder";
-	
+
 	private Drive service;
-	
+
 	private static FileHelperImpl instance;
-	
+
 	/**
-	 * This doesn't implement singleton correctly (constructor should be private)
-	 * TODO:  One we figure out how this will fit into the lifecycle of the servlet we can refactor
+	 * This doesn't implement singleton correctly (constructor should be
+	 * private) TODO: One we figure out how this will fit into the lifecycle of
+	 * the servlet we can refactor
 	 * 
-	 * @param service A reference to the drive API that has been authenticated
+	 * @param service
+	 *            A reference to the drive API that has been authenticated
 	 */
 	public FileHelperImpl(Drive service)
 	{
 		this.service = service;
 		instance = this;
 	}
-	
+
 	/**
 	 * Gets the instance of the FileHelper
 	 * 
@@ -49,13 +52,8 @@ public class FileHelperImpl implements FileHelper
 	{
 		return instance;
 	}
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.rit.honors.drive.FileHelper#getChildren(edu.rit.honors.drive.File)
-	 */
+
+	@Override
 	public Collection<File> getChildren(File file)
 	{
 		List<File> result = new ArrayList<File>();
@@ -63,16 +61,16 @@ public class FileHelperImpl implements FileHelper
 		try
 		{
 			request = service.files().list();
-		
+
 			request.setQ(String.format("'%s' in parents", file.getId()));
 			request.setFields("items(id,mimeType,ownerNames,owners(displayName,kind,permissionId),parents(id,isRoot,kind),title),kind,nextPageToken");
-	
+
 			do
 			{
 				try
 				{
 					FileList files = request.execute();
-	
+
 					// Add every file / folder in the hierarchy
 					for (File f : files.getItems())
 					{
@@ -85,9 +83,9 @@ public class FileHelperImpl implements FileHelper
 							result.add(f);
 						}
 					}
-	
+
 					request.setPageToken(files.getNextPageToken());
-	
+
 				}
 				catch (IOException e)
 				{
@@ -95,8 +93,7 @@ public class FileHelperImpl implements FileHelper
 					throw e;
 				}
 			} while (request.getPageToken() != null && request.getPageToken().length() > 0);
-	
-	
+
 			return result;
 		}
 		catch (IOException e1)
@@ -105,61 +102,32 @@ public class FileHelperImpl implements FileHelper
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#getParent(edu.rit.honors.drive.File)
-	 */
 	@Override
 	public File getParent(File file)
 	{
-		// TODO Auto-generated method stub
+		List<ParentReference> parents = file.getParents();
+		if (parents != null && parents.size() > 0)
+		{
+			return getFileById(parents.get(0).getId());
+		}
+
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.rit.honors.drive.FileHelper#getSiblings(edu.rit.honors.drive.File)
-	 */
 	@Override
-	public ArrayList<File> getSiblings(File file)
+	public Collection<File> getSiblings(File file)
+	{
+		File parent = getParent(file);
+		return getChildren(parent);
+	}
+
+	@Override
+	public Collection<User> getUsers(File file)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#getTree(edu.rit.honors.drive.File)
-	 */
-	@Override
-	public File getTree(File file)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#getUsers(edu.rit.honors.drive.File)
-	 */
-	@Override
-	public ArrayList<User> getUsers(File file)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#addUser(edu.rit.honors.drive.User,
-	 * edu.rit.honors.drive.File)
-	 */
 	@Override
 	public boolean addUser(User user, File file)
 	{
@@ -167,13 +135,6 @@ public class FileHelperImpl implements FileHelper
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.rit.honors.drive.FileHelper#removeUser(edu.rit.honors.drive.User,
-	 * edu.rit.honors.drive.File)
-	 */
 	@Override
 	public boolean removeUser(User user, File file)
 	{
@@ -181,12 +142,6 @@ public class FileHelperImpl implements FileHelper
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.rit.honors.drive.FileHelper#hasUser(edu.rit.honors.drive.User,
-	 * edu.rit.honors.drive.File)
-	 */
 	@Override
 	public boolean hasUser(User user, File file)
 	{
@@ -197,22 +152,34 @@ public class FileHelperImpl implements FileHelper
 	@Override
 	public boolean isFile(File f)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return f != null && !f.getMimeType().equals(FOLDER_MIME);
 	}
 
 	@Override
 	public boolean isDirectory(File f)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return f != null && f.getMimeType().equals(FOLDER_MIME);
 	}
 
 	@Override
 	public boolean hasChildren(File f)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		// Should find a better way than just calculating the children.
+		return isDirectory(f) && getChildren(f).size() > 0;
+	}
+
+	@Override
+	public File getFileById(String id)
+	{
+		try
+		{
+			File file = service.files().get(id).execute();
+			return file;
+		}
+		catch (IOException e)
+		{
+			return null;
+		}
 	}
 
 }

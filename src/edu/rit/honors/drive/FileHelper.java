@@ -10,7 +10,15 @@ import com.google.api.services.drive.model.File;
  * @author Veronica Wharton
  */
 public interface FileHelper {
-
+	
+	/**
+	 * Looks up a file by its ID.
+	 * 
+	 * @param id The ID of the file
+	 * @return the actual file
+	 */
+	public File getFileById(String id);
+	
 	/**
 	 * Find the immediate children of a given File.
 	 * @param file The File whose children should be found
