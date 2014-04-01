@@ -1,8 +1,9 @@
+package edu.rit.honors.drive;
+
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.User;
 import com.google.api.services.drive.model.Permission;
 
-package edu.rit.honors.drive;
 
 public interface UserHelper {
 
