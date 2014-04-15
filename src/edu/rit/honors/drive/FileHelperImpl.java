@@ -182,4 +182,22 @@ public class FileHelperImpl implements FileHelper
 		}
 	}
 
+	@Override
+	public boolean replaceFile(File oldfile) {
+		File newfile = new File();
+		newfile.setTitle(oldfile.getTitle());
+		newfile.setParents(oldfile.getParents());
+		try {
+			newfile = service.files().copy(oldfile.getId(), newfile).execute();
+			try{
+				service.files().delete(oldfile.getId());
+				return true;
+			} catch (IOException e) {
+				service.files().delete(newfile.getId());
+			}
+		} catch (IOException e) {
+		}
+		return false;
+	}
+
 }

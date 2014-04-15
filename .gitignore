@@ -1,5 +1,7 @@
 *.class
 
+.google_apis*
+
 # Package Files #
 *.jar
 *.war
