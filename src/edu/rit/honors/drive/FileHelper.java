@@ -69,6 +69,13 @@ public interface FileHelper {
 	public boolean removeUser(User user, File file);
 
 	/**
+	 * Change ownership of a file by copying it and deleting the old file.
+	 * @param oldfile the file to replace
+	 * @return true on success
+	 */
+	public boolean replaceFile(File oldfile);
+
+	/**
 	 * Determine whether a user has read-write permission for a given File
 	 * @param user The User to check
 	 * @param file The File to check against
